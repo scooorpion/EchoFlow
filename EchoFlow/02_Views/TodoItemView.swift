@@ -13,20 +13,21 @@ struct TodoItemView: View {
     @StateObject private var viewModel = TodoItemViewModel()
     
     var body: some View {
-    
         NavigationStack {
-            
-            List(viewModel.todoItems) { item in
-                NavigationLink(destination: TodoDetailView(todoItem: item)) {
-                    Text(item.title)
+            ScrollView {
+                LazyVStack(spacing: 12, pinnedViews: [.sectionHeaders]) {
+                    
+                    // Section Header 是固定在顶部的
+                    Section(header: HeaderView()) {
+                        ForEach(viewModel.todoItems) { item in
+                            TodoItemCardView(todoItem: item)
+                        }
+                    }
                 }
+                .padding(.horizontal)
             }
-            .navigationTitle("待办清单")
-            .navigationBarItems(trailing: Button(action: {
-                print("添加按钮被点击")
-            }) {
-                Image(systemName: "plus") // +
-            })
+            .background(Color(UIColor.systemGroupedBackground))
+            .navigationBarHidden(true) // 隐藏默认导航栏
         }
     }
 }

@@ -15,10 +15,67 @@ class TodoItemViewModel: ObservableObject {
     
     // 构造方法，用来初始化一些测试数据
     init() {
+        
         todoItems = [
-            TodoItem(title: "买菜"),
-            TodoItem(title: "完成 SwiftUI 项目"),
-            TodoItem(title: "阅读 30 分钟")
+                TodoItem(title: "Go for a walk", iconName: "figure.walk", timeInMinutes: 25, status: .new),
+                TodoItem(title: "Read fiction", iconName: "book.closed", timeInMinutes: 15, status: .skip),
+                TodoItem(title: "To inhabit the bed", iconName: "bed.double", times: 1, status: .done, isCompleted: true),
+                TodoItem(
+                        title: "Buy fresh vegetables",
+                        iconName: "cart",
+                        timeInMinutes: 30,
+                        status: .new,
+                        isCompleted: false
+                    ),
+                    TodoItem(
+                        title: "Write project report",
+                        iconName: "doc.text",
+                        timeInMinutes: 60,
+                        status: .done,
+                        isCompleted: true
+                    ),
+                    TodoItem(
+                        title: "Do laundry",
+                        iconName: "washer",
+                        times: 2,
+                        status: .new,
+                        isCompleted: false
+                    ),
+                    TodoItem(
+                        title: "Practice guitar",
+                        iconName: "guitar",
+                        timeInMinutes: 45,
+                        status: .skip,
+                        isCompleted: false
+                    ),
+                    TodoItem(
+                        title: "Water the plants",
+                        iconName: "leaf",
+                        times: 1,
+                        status: .done,
+                        isCompleted: true
+                    ),
+                    TodoItem(
+                        title: "Meditate",
+                        iconName: "figure.meditating",
+                        timeInMinutes: 15,
+                        status: .new,
+                        isCompleted: false
+                    ),
+                    TodoItem(
+                        title: "Clean bathroom",
+                        iconName: "shower",
+                        timeInMinutes: 25,
+                        status: .skip,
+                        isCompleted: false
+                    ),
+                    TodoItem(
+                        title: "Backup phone data",
+                        iconName: "externaldrive",
+                        times: 1,
+                        status: .done,
+                        isCompleted: true
+                    )
         ]
     }
 }
