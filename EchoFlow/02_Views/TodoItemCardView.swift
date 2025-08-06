@@ -59,9 +59,9 @@ struct TodoItemCardView: View {
 // "关注点分离” (Separation of Concerns)
 // extension：用来存放所有“附加”的、“便利性”的功能。
 // 比如我们的预览样本数据、一些辅助的计算方法等。
-// fileprivate 文件内私有
 
-fileprivate extension TodoItem {
+
+extension TodoItem {
     static let sampleActive = TodoItem(
         title: "Meditate",
         iconName: "apple.meditate",

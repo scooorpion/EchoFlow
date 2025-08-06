@@ -7,27 +7,34 @@
 
 import SwiftUI
 
-// 定义待办事项的详情页面
 struct TodoDetailView: View {
     
-    // 接收从列表中传入的待办事项数据
-    let todoItem: TodoItem
+    // 使用 @Binding，这样对 todoItem 的任何修改，
+    // 都会自动同步回上一个页面（主列表）！
+    // 这就是那根“电话线”。
+    @Binding var todoItem: TodoItem
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            
-            // 显示标题
-            Text(todoItem.title)
-                .font(.title) // 使用大标题样式
-                .bold()       // 加粗
-            
-            // 预留：将来可以添加更多字段，如时间、描述等
-            // Text("总时长：90分钟")
-            // Text("优先级：高")
-            
-            Spacer() // 推动内容靠上
+        // 使用 Form 布局，让编辑界面看起来更像系统设置，很专业
+        Form {
+            Section(header: Text("任务详情")) {
+                // 将任务标题绑定到一个文本输入框
+                TextField("任务标题", text: $todoItem.title)
+                
+                // 添加一个开关来切换完成状态
+                Toggle("标记为完成", isOn: $todoItem.isCompleted)
+            }
         }
-        .padding() // 给整个 VStack 添加内边距
-        .navigationTitle("详情") // 设置导航栏标题
+        // 给这个页面设置一个导航栏标题
+        .navigationTitle("编辑任务")
+        // 设置导航栏标题的显示模式为内联，更紧凑
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+#Preview {
+    
+    NavigationStack {
+        TodoDetailView(todoItem: .constant(TodoItem.sampleActive))
     }
 }

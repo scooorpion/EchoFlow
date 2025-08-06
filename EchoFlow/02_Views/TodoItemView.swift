@@ -15,19 +15,29 @@ struct TodoItemView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                
                 LazyVStack(spacing: 12) {
-                    ForEach(viewModel.todoItems) { item in
-                        TodoItemCardView(todoItem: item)
+                    
+                    // 【关键修改】: 遍历索引，以便创建绑定
+                    ForEach($viewModel.todoItems) { $item in
+                        // 【关键修改】: 使用 NavigationLink 包裹卡片
+                        NavigationLink(destination: TodoDetailView(todoItem: $item)) {
+                            // 你的卡片视图保持不变
+                            TodoItemCardView(todoItem: item)
+                        }
+                        // 让 NavigationLink 的样式变平，去掉默认的箭头和蓝色字体
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 3)
                 .padding(.top, 10)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationBarHidden(true)
+            // 注意：因为我们现在需要用 NavigationStack 的标题，
+            // 所以我们不再完全隐藏它，而是自定义它的外观。
+            // .navigationBarHidden(true)  <-- 我们不再需要这行
             
             .safeAreaInset(edge: .top, spacing: 0) {
+                // HeaderView 依然作为安全区的嵌入视图，保持固定
                 HeaderView()
             }
         }
