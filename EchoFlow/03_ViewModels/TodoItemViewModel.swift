@@ -38,7 +38,7 @@ class TodoItemViewModel: ObservableObject {
                         title: "Do laundry",
                         iconName: "washer",
                         times: 2,
-                        status: .new,
+                        status: .none,
                         isCompleted: false
                     ),
                     TodoItem(
