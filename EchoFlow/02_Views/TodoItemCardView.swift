@@ -49,7 +49,7 @@ struct TodoItemCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.systemGray6)) // 背景色
+                .fill(Color(UIColor.systemGray5)) // 背景色
         )
         .padding(.horizontal)
     }
