@@ -19,7 +19,7 @@ struct HeaderView: View {
             Button(action: {
                 print("点击添加按钮")
             }) {
-                Image(systemName: "plus") // 使用纯粹的加号，更符合原生设计
+                Image(systemName: "plus") // +
                     .font(.title)
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)

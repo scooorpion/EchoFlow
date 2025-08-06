@@ -43,7 +43,7 @@ class TodoItemViewModel: ObservableObject {
                     ),
                     TodoItem(
                         title: "Practice guitar",
-                        iconName: "guitar",
+                        iconName: "guitars",
                         timeInMinutes: 45,
                         status: .skip,
                         isCompleted: false
@@ -57,7 +57,7 @@ class TodoItemViewModel: ObservableObject {
                     ),
                     TodoItem(
                         title: "Meditate",
-                        iconName: "figure.meditating",
+                        iconName: "apple.meditate",
                         timeInMinutes: 15,
                         status: .new,
                         isCompleted: false
