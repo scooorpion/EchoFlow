@@ -16,21 +16,20 @@ struct TodoItemCardView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             
-            Image(systemName: todoItem.iconName)
-                .font(.system(size: 24))
-                .foregroundColor(.primary)
-            
             VStack(alignment: .leading, spacing: 4) {
                 Text(todoItem.title)
                     .font(.headline)
                     .foregroundColor(todoItem.isCompleted ? .gray : .primary)
-                    .strikethrough(todoItem.isCompleted, color: .gray)
+                    .strikethrough(todoItem.isCompleted, color: .gray) //删除线
                 
-                if let statusLabel = todoItem.statusLabel {
-                    Text(statusLabel)
+                if let description = todoItem.description {
+                    Text(description)
                         .font(.caption)
-                        .foregroundColor(todoItem.statusColor)
+                        .foregroundStyle(.gray)
+                        .lineLimit(1)
+                    
                 }
+                
             }
             
             Spacer()
@@ -45,8 +44,9 @@ struct TodoItemCardView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.systemGray5)) //background color
+            RoundedRectangle(cornerRadius: 14)
+            
+                .fill(Color(.white)) //background color
         )
         .padding(.horizontal)
     }
@@ -60,31 +60,29 @@ struct TodoItemCardView: View {
 // extension：用来存放所有“附加”的、“便利性”的功能。
 // 比如我们的预览样本数据、一些辅助的计算方法等。
 
+//
+//extension TodoItem {
+//    static let sampleActive = TodoItem(
+//        title: "Meditate",
+//        timeInMinutes: 15,
+//        //status: .new,
+//        //isCompleted: false
+//    )
+//    
+//    static let sampleCompleted = TodoItem(
+//        title: "Clean bathroom",
+//        timeInMinutes: 25,
+//        //status: .skip,
+//        //isCompleted: false
+//    )
+//}
 
-extension TodoItem {
-    static let sampleActive = TodoItem(
-        title: "Meditate",
-        iconName: "apple.meditate",
-        timeInMinutes: 15,
-        status: .new,
-        isCompleted: false
-    )
-    
-    static let sampleCompleted = TodoItem(
-        title: "Clean bathroom",
-        iconName: "shower",
-        timeInMinutes: 25,
-        status: .skip,
-        isCompleted: false
-    )
-}
-
-
-#Preview {
-    VStack(spacing: 20) {
-            TodoItemCardView(todoItem: .sampleActive)
-            TodoItemCardView(todoItem: .sampleCompleted)
-        }
-        .padding()
-        .background(Color(UIColor.systemGroupedBackground))
-}
+//
+//#Preview {
+//    VStack(spacing: 20) {
+//            TodoItemCardView(todoItem: .sampleActive)
+//            TodoItemCardView(todoItem: .sampleCompleted)
+//        }
+//        .padding()
+//        .background(Color(UIColor.systemGroupedBackground))
+//}
