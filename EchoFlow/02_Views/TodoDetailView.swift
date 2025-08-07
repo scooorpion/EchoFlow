@@ -21,7 +21,6 @@ struct TodoDetailView: View {
             
             // MARK: - 时间设置 Section
             Section {
-                // 如果是全天任务，只显示日期选择器
                 if todoItem.isAllDay {
                     DatePicker("日期", selection: $todoItem.startDate, displayedComponents: .date)
                 } else {
@@ -33,11 +32,12 @@ struct TodoDetailView: View {
             }
             
             // MARK: - 备注 Section
-//            Section(header: Text("备注")) {
-//                // 用一个占位符来模拟 "写备注"
-//                TextEditor(text: $todoItem.notes)
-//                    .frame(minHeight: 60) // 给备注一个最小高度
-//            }
+            
+            Section(header: Text("备注")) {
+                // 用一个占位符来模拟 "写备注"
+                TextEditor(text: $todoItem.notes)
+                    .frame(minHeight: 60) // 给备注一个最小高度
+            }
         }
         .navigationTitle("任务详情") // 导航栏标题
         .navigationBarTitleDisplayMode(.inline) // 小标题样式

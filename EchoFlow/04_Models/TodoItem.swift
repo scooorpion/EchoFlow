@@ -15,7 +15,7 @@ struct TodoItem: Identifiable {
     var title: String
     var timeInMinutes: Int? = nil
     var description: String? = ""
-    var notes: String? = ""
+    var notes: String = ""
     
     // MARK: - Date Set
     var isAllDay: Bool = false
