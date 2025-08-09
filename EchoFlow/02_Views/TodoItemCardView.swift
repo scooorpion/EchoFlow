@@ -20,32 +20,27 @@ struct TodoItemCardView: View {
                 Text(todoItem.title)
                     .font(.headline)
                     .foregroundColor(todoItem.isCompleted ? .gray : .primary)
-                    .strikethrough(todoItem.isCompleted, color: .gray) //删除线
+                    .strikethrough(todoItem.isCompleted, color: .gray) 
+                    .lineLimit(1)
                 
-                if let description = todoItem.description {
-                    Text(description)
-                        .font(.caption)
-                        .foregroundStyle(.gray)
-                        .lineLimit(1)
-                    
-                }
-                
+                Text(todoItem.description)
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+                    .lineLimit(1)
             }
             
             Spacer()
             
             VStack {
-                if let displayTime = todoItem.timeText {
-                    Text(displayTime)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+                Text(String(todoItem.timeInMinutes))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
         }
         .padding()
         .background(
+    
             RoundedRectangle(cornerRadius: 14)
-            
                 .fill(Color(.white)) //background color
         )
         .padding(.horizontal)
@@ -60,22 +55,22 @@ struct TodoItemCardView: View {
 // extension：用来存放所有“附加”的、“便利性”的功能。
 // 比如我们的预览样本数据、一些辅助的计算方法等。
 
-//
-//extension TodoItem {
-//    static let sampleActive = TodoItem(
-//        title: "Meditate",
-//        timeInMinutes: 15,
-//        //status: .new,
-//        //isCompleted: false
-//    )
-//    
-//    static let sampleCompleted = TodoItem(
-//        title: "Clean bathroom",
-//        timeInMinutes: 25,
-//        //status: .skip,
-//        //isCompleted: false
-//    )
-//}
+
+extension TodoItem {
+    static let sampleActive = TodoItem(
+        title: "Meditate",
+        timeInMinutes: 15,
+        //status: .new,
+        //isCompleted: false
+    )
+    
+    static let sampleCompleted = TodoItem(
+        title: "Clean bathroom",
+        timeInMinutes: 25,
+        //status: .skip,
+        //isCompleted: false
+    )
+}
 
 //
 //#Preview {

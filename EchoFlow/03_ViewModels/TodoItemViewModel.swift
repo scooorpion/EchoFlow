@@ -26,61 +26,8 @@ class TodoItemViewModel: ObservableObject {
                 title: "Read fiction",
                 timeInMinutes: 1200,
             )
-            
-            
-//            TodoItem(title: "To inhabit the bed", isCompleted: true, iconName: "bed.double", times: 1, status: .done),
-//                TodoItem(
-//                        title: "Buy fresh vegetables",
-//                        timeInMinutes: 30, iconName: "cart",
-//                        status: .new,
-//                        isCompleted: false
-//                    ),
-//                    TodoItem(
-//                        title: "Write project report",
-//                        timeInMinutes: 60, isCompleted: true, iconName: "doc.text",
-//                        status: .done
-//                    ),
-//                    TodoItem(
-//                        title: "Do laundry",
-//                        isCompleted: false, iconName: "washer",
-//                        times: 2,
-//                        status: .none
-//                    ),
-//                    TodoItem(
-//                        title: "Practice guitar",
-//                        iconName: "guitars",
-//                        timeInMinutes: 45,
-//                        status: .skip,
-//                        isCompleted: false
-//                    ),
-//                    TodoItem(
-//                        title: "Water the plants",
-//                        iconName: "leaf",
-//                        times: 1,
-//                        status: .done,
-//                        isCompleted: true
-//                    ),
-//                    TodoItem(
-//                        title: "Meditate",
-//                        iconName: "apple.meditate",
-//                        timeInMinutes: 15,
-//                        status: .new,
-//                        isCompleted: false
-//                    ),
-//                    TodoItem(
-//                        title: "Clean bathroom",
-//                        iconName: "shower",
-//                        timeInMinutes: 25,
-//                        status: .skip,
-//                        isCompleted: false
-//                    ),
-//                    TodoItem(
-//                        title: "Backup phone data",
-//                        iconName: "externaldrive",
-//                        times: 1,
-//                        status: .done,
-//                        isCompleted: true
-//                    )
         ]
+        
+        
     }
 }

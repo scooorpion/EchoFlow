@@ -13,8 +13,8 @@ struct TodoItem: Identifiable {
     // MARK: - Basic Setting
     let id = UUID()
     var title: String
-    var timeInMinutes: Int? = nil
-    var description: String? = ""
+    var timeInMinutes: Int
+    var description: String = ""
     var notes: String = ""
     
     // MARK: - Date Set
@@ -25,13 +25,14 @@ struct TodoItem: Identifiable {
     
     
     // MARK: - 拓展属性
+    var AutoFill: String = ""
     var isCompleted: Bool = false
     
-    var timeText: String? {
-        if let minutes = timeInMinutes {
-            return "\(minutes) min"
-        }
-        return nil
-    }
+//    var timeText: String? {
+//        if let minutes = timeInMinutes {
+//            return "\(minutes) min"
+//        }
+//        return nil
+//    }
 
 }

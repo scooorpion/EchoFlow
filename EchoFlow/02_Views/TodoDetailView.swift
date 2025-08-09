@@ -9,14 +9,49 @@ import SwiftUI
 
 struct TodoDetailView: View {
     
-    // 使用 @Binding，这样对 todoItem 的任何修改，都会自动同步回上一个页面（主列表），就像电话线
     @Binding var todoItem: TodoItem
     
     var body: some View {
         Form {
-            // MARK: - 任务标题 Section
-            Section() {
-                TextField("任务标题", text: $todoItem.title)
+            // MARK: - Basic Section
+            
+            
+            Section(header: Text("自动填补")) {
+                TextEditor(text: $todoItem.AutoFill)
+                    .frame(minHeight: 30)
+            }
+            
+            Section {
+                
+                LabeledContent {
+                    TextField("输入名称", text: $todoItem.title)
+                        .multilineTextAlignment(.trailing)
+                } label: {
+                    Text("任务名称")
+                }
+                
+                
+                LabeledContent {
+                    TextField("输入时间", value: Binding(
+                        get: { todoItem.timeInMinutes },
+                        set: { newValue in
+                            let clamped = min(newValue, 9999)
+                            todoItem.timeInMinutes = clamped
+                        }
+                    ),
+                    format: .number)
+                        .multilineTextAlignment(.trailing)
+                        .keyboardType(.numberPad)
+                } label: {
+                    Text("分钟")
+                }
+                
+            }
+            
+            Section(header: Text("描述（可选）")) {
+                // 用一个占位符来模拟 "写备注"
+                TextEditor(text: $todoItem.description)
+                    .frame(minHeight: 40) // 给备注一个最小高度
             }
             
             // MARK: - 时间设置 Section
@@ -36,7 +71,7 @@ struct TodoDetailView: View {
             Section(header: Text("备注")) {
                 // 用一个占位符来模拟 "写备注"
                 TextEditor(text: $todoItem.notes)
-                    .frame(minHeight: 60) // 给备注一个最小高度
+                    .frame(minHeight: 40) // 给备注一个最小高度
             }
         }
         .navigationTitle("任务详情") // 导航栏标题
@@ -57,9 +92,9 @@ struct TodoDetailView: View {
     }
 }
 
-//#Preview {
-//    
-//    NavigationStack {
-//        TodoDetailView(todoItem: .constant(TodoItem.sampleActive))
-//    }
-//}
+#Preview {
+    
+    NavigationStack {
+        TodoDetailView(todoItem: .constant(TodoItem.sampleActive))
+    }
+}
