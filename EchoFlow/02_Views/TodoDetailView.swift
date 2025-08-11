@@ -10,6 +10,7 @@ import SwiftUI
 struct TodoDetailView: View {
     
     @Binding var todoItem: TodoItem
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
         Form {
@@ -81,8 +82,9 @@ struct TodoDetailView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("完成") {
-                
-                    print("完成按钮被点击。当前标题: \(todoItem.title)")
+                    // 由于使用了@Binding，修改会自动保存到父视图
+                    // 关闭当前视图，返回到列表页面
+                    dismiss()
                 }
                 .fontWeight(.bold)
             }
