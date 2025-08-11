@@ -20,7 +20,7 @@ struct TodoItemView: View {
                     ForEach($viewModel.todoItems) { $item in
                         // 使用NavigationLink，并添加手势识别器来处理长按
                         NavigationLink(destination: CountdownView(todoItem: $item)) {
-                            TodoItemCardView(todoItem: item)
+                            TodoItemCardView(todoItem: $item)  // 传递绑定而不是值
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -29,6 +29,7 @@ struct TodoItemView: View {
                             LongPressGesture(minimumDuration: 0.5)
                                 .onEnded { _ in
                                     // 设置选中的待办事项，这将触发sheet显示
+                                    // 使用当前item的值来设置selectedDetailItem
                                     selectedDetailItem = item
                                     
                                     // 创建触觉反馈
@@ -50,21 +51,26 @@ struct TodoItemView: View {
                 HeaderView()
             }
             // 添加sheet修饰符，用于长按显示详情页
-            // sheet(item:)修饰符的工作原理：
-            // 1. 当$selectedDetailItem的值不为nil时，会自动显示sheet
-            // 2. 当$selectedDetailItem的值变为nil时，sheet会自动关闭
-            // 3. item参数会接收selectedDetailItem的值（非nil时）
             .sheet(item: $selectedDetailItem) { item in
                 // 找到对应的绑定
-                // 注意：这里不能直接使用传入的item，因为它不是@Binding
-                // 我们需要在viewModel.todoItems数组中找到对应的项，并创建绑定
                 if let index = viewModel.todoItems.firstIndex(where: { $0.id == item.id }) {
                     // 使用NavigationStack包装详情视图，以便显示导航栏
                     NavigationStack {
                         // 创建TodoDetailView并传入绑定
                         // 使用$viewModel.todoItems[index]创建绑定，确保修改会反映到模型中
                         TodoDetailView(todoItem: $viewModel.todoItems[index])
+                            .onDisappear {
+                                // 当详情页关闭时，强制刷新视图以确保数据同步
+                                // 这里通过修改一个临时变量来触发视图刷新
+                                viewModel.objectWillChange.send()
+                            }
                     }
+                }
+            }
+            .onChange(of: selectedDetailItem) { oldValue, newValue in
+                // 当selectedDetailItem变为nil时（即sheet关闭时），清空选中项
+                if newValue == nil {
+                    // 这里可以添加额外的清理逻辑
                 }
             }
             

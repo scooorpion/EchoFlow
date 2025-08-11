@@ -10,8 +10,8 @@ import SwiftUI
 // 自定义的单个代办事项卡片视图
 struct TodoItemCardView: View {
     
-    // 传入的待办事项数据
-    let todoItem: TodoItem
+    // 传入的待办事项数据 - 使用@Binding确保数据变化时视图会更新
+    @Binding var todoItem: TodoItem
     
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
@@ -58,36 +58,23 @@ struct TodoItemCardView: View {
 }
 
 
-// 类型属性 (Type Property / Static Property)：使用 static 关键字。它不属于任何一个具体的实例，而是属于 TodoItem 这个类型本身。
-// 这里的关键区别在于 static 关键字
-
-// "关注点分离” (Separation of Concerns)
-// extension：用来存放所有“附加”的、“便利性”的功能。
-// 比如我们的预览样本数据、一些辅助的计算方法等。
-
-
 extension TodoItem {
     static let sampleActive = TodoItem(
         title: "Meditate",
-        timeInMinutes: 15,
-        //status: .new,
-        //isCompleted: false
-    ).apply { $0.usedTimeInMinutes = 5 }  // 已使用5分钟
+        timeInMinutes: 15
+    ).apply { $0.usedTimeInMinutes = 5 }
     
     static let sampleCompleted = TodoItem(
         title: "Clean bathroom",
-        timeInMinutes: 25,
-        //status: .skip,
-        //isCompleted: false
-    ).apply { $0.usedTimeInMinutes = 20 }  // 已使用20分钟
+        timeInMinutes: 25
+    ).apply { $0.usedTimeInMinutes = 20 }
 }
 
-//
-//#Preview {
-//    VStack(spacing: 20) {
-//            TodoItemCardView(todoItem: .sampleActive)
-//            TodoItemCardView(todoItem: .sampleCompleted)
-//        }
-//        .padding()
-//        .background(Color(UIColor.systemGroupedBackground))
-//}
+#Preview {
+    @State var sampleItem = TodoItem.sampleActive
+    return VStack(spacing: 20) {
+        TodoItemCardView(todoItem: $sampleItem)
+    }
+    .padding()
+    .background(Color(UIColor.systemGroupedBackground))
+}

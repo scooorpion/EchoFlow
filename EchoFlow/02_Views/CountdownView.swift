@@ -65,15 +65,15 @@ struct CountdownView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding(.horizontal)
-            .onChange(of: isCountdownMode) { newValue in
+            .onChange(of: isCountdownMode) {
                 // 切换模式时重置计时器
                 resetTimer()
             }
             
-            // 大圆形计时显示
-            ZStack {
-                // 外圈和进度圈只在倒计时模式下显示
-                if isCountdownMode {
+            // 计时显示区域
+            if isCountdownMode {
+                // 倒计时模式 - 显示圆环和时间
+                ZStack {
                     // 外圈
                     Circle()
                         .stroke(Color.gray.opacity(0.2), lineWidth: 20)
@@ -85,19 +85,30 @@ struct CountdownView: View {
                         .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                         .frame(width: 280, height: 280)
                         .rotationEffect(.degrees(-90))
+                    
+                    // 时间文本 - 倒计时模式
+                    VStack {
+                        Text(timeString)
+                            .font(.system(size: 60, weight: .bold))
+                        
+                        Text("剩余时间")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
                 }
-                
-                // 时间文本 - 在两种模式下都显示
+                .frame(width: 280, height: 280)
+            } else {
+                // 正计时模式 - 只显示时间文本，不显示圆环
                 VStack {
                     Text(timeString)
                         .font(.system(size: 60, weight: .bold))
                     
-                    Text(isCountdownMode ? "剩余时间" : "已用时间")
+                    Text("已用时间")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
+                .frame(width: 280, height: 280) // 保持相同的空间大小
             }
-            .frame(width: 280, height: 280) // 确保在正计时模式下也保持相同的空间
             
             // 时间调整滑块（仅在倒计时模式且非运行状态下显示）
             if isCountdownMode && !isRunning {
@@ -304,10 +315,8 @@ struct CountdownView: View {
             // 记录实际使用的时间到新属性
             todoItem.usedTimeInMinutes = max(usedTimeInMinutes, 0)
         } else {
-            // 正计时模式：直接保存已用时间（秒转分钟，向上取整）
+            // 正计时模式：只更新usedTimeInMinutes，不覆盖timeInMinutes
             let minutes = Int(ceil(Double(timeInSeconds) / 60.0))
-            // 正计时模式下，设定时间保持为0（表示无限制），实际使用时间记录到usedTimeInMinutes
-            todoItem.timeInMinutes = 0
             todoItem.usedTimeInMinutes = minutes
         }
     }

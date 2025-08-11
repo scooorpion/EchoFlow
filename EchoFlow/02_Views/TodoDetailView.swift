@@ -11,6 +11,7 @@ struct TodoDetailView: View {
     
     @Binding var todoItem: TodoItem
     @Environment(\.dismiss) private var dismiss
+    @State private var timeInputText: String = ""
     
     var body: some View {
         Form {
@@ -33,16 +34,26 @@ struct TodoDetailView: View {
                 
                 
                 LabeledContent {
-                    TextField("输入时间", value: Binding(
-                        get: { todoItem.timeInMinutes },
-                        set: { newValue in
-                            let clamped = min(newValue, 9999)
-                            todoItem.timeInMinutes = clamped
-                        }
-                    ),
-                    format: .number)
+                    TextField("输入时间", text: $timeInputText)
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.numberPad)
+                        .onChange(of: timeInputText) { _, newValue in
+                            // 只允许数字字符
+                            let filtered = newValue.filter { $0.isNumber }
+                            // 限制最多4位数字
+                            let limited = String(filtered.prefix(4))
+                            
+                            if limited != newValue {
+                                timeInputText = limited
+                            }
+                            
+                            // 更新todoItem的timeInMinutes
+                            if let intValue = Int(limited) {
+                                todoItem.timeInMinutes = intValue
+                            } else if limited.isEmpty {
+                                todoItem.timeInMinutes = 0
+                            }
+                        }
                 } label: {
                     Text("设定分钟")
                 }
@@ -88,13 +99,15 @@ struct TodoDetailView: View {
         }
         .navigationTitle("任务详情") // 导航栏标题
         .navigationBarTitleDisplayMode(.inline) // 小标题样式
+        .onAppear {
+            // 初始化时间输入文本
+            timeInputText = todoItem.timeInMinutes > 0 ? String(todoItem.timeInMinutes) : ""
+        }
         
         // MARK: - 导航栏按钮
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("完成") {
-                    // 由于使用了@Binding，修改会自动保存到父视图
-                    // 关闭当前视图，返回到列表页面
                     dismiss()
                 }
                 .fontWeight(.bold)
