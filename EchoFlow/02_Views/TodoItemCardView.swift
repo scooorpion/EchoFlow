@@ -31,10 +31,20 @@ struct TodoItemCardView: View {
             
             Spacer()
             
-            VStack {
-                Text(String(todoItem.timeInMinutes))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            VStack(alignment: .trailing, spacing: 2) {
+                // 显示设定的时间
+                if todoItem.timeInMinutes > 0 {
+                    Text("设定: \(todoItem.timeInMinutes)分钟")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                // 显示实际使用的时间
+                if todoItem.usedTimeInMinutes > 0 {
+                    Text("已用: \(todoItem.usedTimeInMinutes)分钟")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
             }
         }
         .padding()
@@ -62,14 +72,14 @@ extension TodoItem {
         timeInMinutes: 15,
         //status: .new,
         //isCompleted: false
-    )
+    ).apply { $0.usedTimeInMinutes = 5 }  // 已使用5分钟
     
     static let sampleCompleted = TodoItem(
         title: "Clean bathroom",
         timeInMinutes: 25,
         //status: .skip,
         //isCompleted: false
-    )
+    ).apply { $0.usedTimeInMinutes = 20 }  // 已使用20分钟
 }
 
 //

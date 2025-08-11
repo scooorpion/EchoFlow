@@ -44,7 +44,18 @@ struct TodoDetailView: View {
                         .multilineTextAlignment(.trailing)
                         .keyboardType(.numberPad)
                 } label: {
-                    Text("分钟")
+                    Text("设定分钟")
+                }
+                
+                // 显示已用时间（只读）
+                if todoItem.usedTimeInMinutes > 0 {
+                    LabeledContent {
+                        Text("\(todoItem.usedTimeInMinutes)")
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(.blue)
+                    } label: {
+                        Text("已用分钟")
+                    }
                 }
                 
             }

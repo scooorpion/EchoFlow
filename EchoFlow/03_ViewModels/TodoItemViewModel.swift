@@ -21,11 +21,11 @@ class TodoItemViewModel: ObservableObject {
                 title: "Go for a walk",
                 timeInMinutes: 1200,
                 description: "Walk 1km day by day.Walk 1km day by dayWalk 1km day by dayWalk 1km day by dayWalk 1km day by dayWalk 1km day by dayWalk 1km day by dayWalk 1km day by dayWalk 1km day by day"
-            ),
+            ).apply { $0.usedTimeInMinutes = 30 },  // 示例：已使用30分钟
             TodoItem(
                 title: "Read fiction",
                 timeInMinutes: 1200,
-            )
+            ).apply { $0.usedTimeInMinutes = 0 }  // 示例：尚未使用时间
         ]
         
         

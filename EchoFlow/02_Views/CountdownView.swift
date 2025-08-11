@@ -72,19 +72,22 @@ struct CountdownView: View {
             
             // 大圆形计时显示
             ZStack {
-                // 外圈
-                Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                    .frame(width: 280, height: 280)
+                // 外圈和进度圈只在倒计时模式下显示
+                if isCountdownMode {
+                    // 外圈
+                    Circle()
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 20)
+                        .frame(width: 280, height: 280)
+                    
+                    // 进度圈
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                        .frame(width: 280, height: 280)
+                        .rotationEffect(.degrees(-90))
+                }
                 
-                // 进度圈
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                    .frame(width: 280, height: 280)
-                    .rotationEffect(.degrees(-90))
-                
-                // 时间文本
+                // 时间文本 - 在两种模式下都显示
                 VStack {
                     Text(timeString)
                         .font(.system(size: 60, weight: .bold))
@@ -94,6 +97,7 @@ struct CountdownView: View {
                         .foregroundColor(.gray)
                 }
             }
+            .frame(width: 280, height: 280) // 确保在正计时模式下也保持相同的空间
             
             // 时间调整滑块（仅在倒计时模式且非运行状态下显示）
             if isCountdownMode && !isRunning {
@@ -295,11 +299,16 @@ struct CountdownView: View {
         if isCountdownMode {
             // 倒计时模式：保存已用时间（初始时间减去剩余时间）
             let usedTimeInMinutes = initialTimeMinutes - (timeInSeconds / 60)
-            todoItem.timeInMinutes = max(usedTimeInMinutes, 0)
+            // 保留原始设定的时间值
+            todoItem.timeInMinutes = initialTimeMinutes
+            // 记录实际使用的时间到新属性
+            todoItem.usedTimeInMinutes = max(usedTimeInMinutes, 0)
         } else {
             // 正计时模式：直接保存已用时间（秒转分钟，向上取整）
             let minutes = Int(ceil(Double(timeInSeconds) / 60.0))
-            todoItem.timeInMinutes = minutes
+            // 正计时模式下，设定时间保持为0（表示无限制），实际使用时间记录到usedTimeInMinutes
+            todoItem.timeInMinutes = 0
+            todoItem.usedTimeInMinutes = minutes
         }
     }
 }
