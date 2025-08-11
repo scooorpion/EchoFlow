@@ -29,178 +29,213 @@ struct CountdownView: View {
     @State private var initialTimeMinutes: Int
     // 是否显示确认放弃对话框
     @State private var showingAbandonAlert = false
+    // 是否已经开始过计时
+    @State private var hasStarted = false
     
     // 初始化方法
     init(todoItem: Binding<TodoItem>) {
-        // 初始化绑定的待办事项
+        // 绑定todoItem
         self._todoItem = todoItem
         
-        // 保存初始时间（分钟）
-        self._initialTimeMinutes = State(initialValue: todoItem.wrappedValue.timeInMinutes)
+        // 倒计时默认时间固定为25分钟，与TodoItem的设定时间无关
+        let defaultCountdownMinutes = 25
+        
+        // 保存初始时间（分钟）- 倒计时专用
+        self._initialTimeMinutes = State(initialValue: defaultCountdownMinutes)
         
         // 初始化计时时间（秒）
-        // 默认为倒计时模式，将分钟转换为秒
-        // 注意：这里使用了todoItem.wrappedValue来获取实际的TodoItem值
-        // 因为todoItem是Binding类型，需要通过wrappedValue访问实际值
-        self._timeInSeconds = State(initialValue: todoItem.wrappedValue.timeInMinutes * 60) // 转换为秒
+        // 默认为倒计时模式，使用固定的25分钟
+        self._timeInSeconds = State(initialValue: defaultCountdownMinutes * 60)
         
-        // 默认使用倒计时模式，如果todoItem的timeInMinutes为0，则切换到正计时模式
-        if todoItem.wrappedValue.timeInMinutes == 0 {
-            self._isCountdownMode = State(initialValue: false)
-            self._timeInSeconds = State(initialValue: 0) // 正计时从0开始
-        }
+        // 如果用户想要正计时模式，可以手动切换
+        // 这里默认都是倒计时模式
     }
     
     var body: some View {
-        VStack(spacing: 30) {
-            // 顶部标题
-            Text(todoItem.title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            // 计时模式切换
-            Picker("计时模式", selection: $isCountdownMode) {
-                Text("倒计时").tag(true)
-                Text("正计时").tag(false)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal)
-            .onChange(of: isCountdownMode) {
-                // 切换模式时重置计时器
-                resetTimer()
-            }
-            
-            // 计时显示区域
-            if isCountdownMode {
-                // 倒计时模式 - 显示圆环和时间
-                ZStack {
-                    // 外圈
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                        .frame(width: 280, height: 280)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // 顶部区域：标题 + 模式切换 (固定高度: 120px)
+                VStack(spacing: 15) {
+                    Text(todoItem.title)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                     
-                    // 进度圈
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                        .frame(width: 280, height: 280)
-                        .rotationEffect(.degrees(-90))
-                    
-                    // 时间文本 - 倒计时模式
-                    VStack {
-                        Text(timeString)
-                            .font(.system(size: 60, weight: .bold))
-                        
-                        Text("剩余时间")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                    Picker("计时模式", selection: $isCountdownMode) {
+                        Text("倒计时").tag(true)
+                        Text("正计时").tag(false)
                     }
-                }
-                .frame(width: 280, height: 280)
-            } else {
-                // 正计时模式 - 只显示时间文本，不显示圆环
-                VStack {
-                    Text(timeString)
-                        .font(.system(size: 60, weight: .bold))
-                    
-                    Text("已用时间")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-                .frame(width: 280, height: 280) // 保持相同的空间大小
-            }
-            
-            // 时间调整滑块（仅在倒计时模式且非运行状态下显示）
-            if isCountdownMode && !isRunning {
-                VStack {
-                    Text("\(initialTimeMinutes) 分钟")
-                        .font(.headline)
-                    
-                    Slider(value: Binding<Double>(
-                        get: { Double(initialTimeMinutes) },
-                        set: { 
-                            initialTimeMinutes = Int($0)
-                            // 更新todoItem的timeInMinutes
-                            todoItem.timeInMinutes = initialTimeMinutes
-                            // 重置计时器以应用新时间
-                            resetTimer()
-                        }
-                    ), in: 1...60, step: 1)
+                    .pickerStyle(SegmentedPickerStyle())
                     .padding(.horizontal)
-                }
-            }
-            
-            // 控制按钮
-            HStack(spacing: 40) {
-                // 放弃按钮
-                Button(action: {
-                    // 显示确认对话框
-                    showingAbandonAlert = true
-                }) {
-                    VStack {
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundColor(.red)
-                        Text("放弃")
-                            .font(.caption)
-                            .foregroundColor(.red)
+                    .onChange(of: isCountdownMode) {
+                        resetTimer()
                     }
                 }
+                .frame(height: 120)
+                .frame(maxWidth: .infinity)
                 
-                // 开始/暂停按钮
-                Button(action: {
-                    if isRunning {
-                        pauseTimer()
+                Spacer(minLength: 20)
+                
+                // 计时显示区域 (固定高度: 300px)
+                VStack {
+                    if isCountdownMode {
+                        // 倒计时模式 - 显示圆环和时间
+                        ZStack {
+                            // 外圈
+                            Circle()
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 20)
+                                .frame(width: 280, height: 280)
+                            
+                            // 进度圈
+                            Circle()
+                                .trim(from: 0, to: progress)
+                                .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                                .frame(width: 280, height: 280)
+                                .rotationEffect(.degrees(-90))
+                            
+                            // 时间文本 - 倒计时模式
+                            VStack {
+                                Text(timeString)
+                                    .font(.system(size: 60, weight: .bold))
+                                
+                                Text("剩余时间")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
+                        }
                     } else {
-                        startTimer()
-                    }
-                }) {
-                    VStack {
-                        Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
-                            .resizable()
-                            .frame(width: 60, height: 60)
-                        Text(isRunning ? "暂停" : "开始")
-                            .font(.caption)
+                        // 正计时模式 - 只显示时间文本，不显示圆环
+                        VStack {
+                            Text(timeString)
+                                .font(.system(size: 60, weight: .bold))
+                            
+                            Text("已用时间")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                        }
+                        .frame(width: 280, height: 280)
                     }
                 }
+                .frame(height: 300)
+                .frame(maxWidth: .infinity)
                 
-                // 重置按钮
-                Button(action: {
-                    resetTimer()
-                }) {
-                    VStack {
-                        Image(systemName: "arrow.counterclockwise.circle.fill")
-                            .resizable()
-                            .frame(width: 50, height: 50)
-                            .foregroundColor(.gray)
-                        Text("重置")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                Spacer(minLength: 10)
+                
+                // 滑块区域 (固定高度: 80px)
+                VStack {
+                    if isCountdownMode && !isRunning && !hasStarted {
+                        VStack(spacing: 10) {
+                            Text("\(initialTimeMinutes) 分钟")
+                                .font(.headline)
+                            
+                            Slider(value: Binding<Double>(
+                                get: { Double(initialTimeMinutes) },
+                                set: { 
+                                    initialTimeMinutes = Int($0)
+                                    resetTimer()
+                                }
+                            ), in: 1...60, step: 1)
+                            .padding(.horizontal)
+                        }
+                    } else {
+                        // 占位空间，保持布局稳定
+                        Rectangle()
+                            .fill(Color.clear)
                     }
                 }
+                .frame(height: 80)
+                .frame(maxWidth: .infinity)
+                
+                Spacer(minLength: 10)
+                
+                // 控制按钮区域 (固定高度: 100px)
+                VStack {
+                    HStack(spacing: 40) {
+                        // 放弃按钮
+                        Button(action: {
+                            showingAbandonAlert = true
+                        }) {
+                            VStack {
+                                Image(systemName: "xmark.circle.fill")
+                                    .resizable()
+                                    .frame(width: 50, height: 50)
+                                    .foregroundColor(.red)
+                                Text("放弃")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                        
+                        // 开始/暂停按钮
+                        Button(action: {
+                            if isRunning {
+                                pauseTimer()
+                            } else {
+                                startTimer()
+                                hasStarted = true
+                            }
+                        }) {
+                            VStack {
+                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                                Text(isRunning ? "暂停" : "开始")
+                                    .font(.caption)
+                            }
+                        }
+                        
+                        // 重置按钮
+                        Button(action: {
+                            resetTimer()
+                        }) {
+                            VStack {
+                                Image(systemName: "arrow.counterclockwise.circle.fill")
+                                    .resizable()
+                                    .frame(width: 50, height: 50)
+                                    .foregroundColor(.gray)
+                                Text("重置")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                }
+                .frame(height: 100)
+                .frame(maxWidth: .infinity)
+                
+                Spacer(minLength: 10)
+                
+                // 完成按钮区域 (固定高度: 70px)
+                VStack {
+                    if !isCountdownMode && hasStarted {
+                        Button(action: {
+                            saveTimeToTodoItem()
+                            dismiss()
+                        }) {
+                            Text("完成计时")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                        .padding(.horizontal)
+                    } else {
+                        // 占位空间，保持布局稳定
+                        Rectangle()
+                            .fill(Color.clear)
+                    }
+                }
+                .frame(height: 70)
+                .frame(maxWidth: .infinity)
+                
+                Spacer(minLength: 20)
             }
-            .padding(.top, 20)
-            
-            // 完成按钮
-            Button(action: {
-                // 停止计时器并保存时间
-                saveTimeToTodoItem()
-                // 关闭视图
-                dismiss()
-            }) {
-                Text("完成计时")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .cornerRadius(10)
-            }
-            .padding(.horizontal)
-            .padding(.top, 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding()
+        .padding(.horizontal)
         .navigationTitle("专注计时")
         .navigationBarTitleDisplayMode(.inline)
         .alert("确认放弃", isPresented: $showingAbandonAlert) {
@@ -273,8 +308,7 @@ struct CountdownView: View {
             } else {
                 // 正计时模式：时间一直增加
                 self.timeInSeconds += 1
-                // 每次更新时保存当前时间到TodoItem
-                self.saveTimeToTodoItem()
+                // 正计时模式不需要每秒保存，只在暂停或结束时保存
             }
         }
     }
@@ -303,21 +337,33 @@ struct CountdownView: View {
             // 正计时模式：重置为0
             timeInSeconds = 0
         }
+        
+        // 重置开始状态
+        hasStarted = false
     }
     
     // 保存时间到TodoItem
     private func saveTimeToTodoItem() {
-        if isCountdownMode {
-            // 倒计时模式：保存已用时间（初始时间减去剩余时间）
-            let usedTimeInMinutes = initialTimeMinutes - (timeInSeconds / 60)
-            // 保留原始设定的时间值
-            todoItem.timeInMinutes = initialTimeMinutes
-            // 记录实际使用的时间到新属性
-            todoItem.usedTimeInMinutes = max(usedTimeInMinutes, 0)
-        } else {
-            // 正计时模式：只更新usedTimeInMinutes，不覆盖timeInMinutes
-            let minutes = Int(ceil(Double(timeInSeconds) / 60.0))
-            todoItem.usedTimeInMinutes = minutes
+        // 只有在计时器运行过或有时间变化时才保存
+        if hasStarted {
+            if isCountdownMode {
+                // 倒计时模式：累加已用时间到TodoItem的已用时间中
+                let usedTimeInSeconds = (initialTimeMinutes * 60) - timeInSeconds
+                if usedTimeInSeconds > 0 {
+                    // 将本次倒计时的已用时间累加到TodoItem的总已用时间中
+                    todoItem.usedTimeInSeconds += usedTimeInSeconds
+                }
+                // 注意：不修改todoItem的timeInSeconds，保持原有的设定时间不变
+            } else {
+                // 正计时模式：累加已用时间到TodoItem的已用时间中
+                if timeInSeconds > 0 {
+                    todoItem.usedTimeInSeconds += timeInSeconds
+                }
+                // 注意：不修改todoItem的timeInSeconds，保持原有的设定时间不变
+            }
+            
+            // 保存后重置状态，避免重复保存
+            hasStarted = false
         }
     }
 }

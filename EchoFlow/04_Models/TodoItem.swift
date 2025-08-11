@@ -25,10 +25,32 @@ struct TodoItem: Identifiable, Equatable {
     // MARK: - Basic Setting
     let id = UUID()
     var title: String
-    var timeInMinutes: Int  // 设定的时间（分钟）
-    var usedTimeInMinutes: Int = 0  // 实际使用的时间（分钟）
+    var timeInSeconds: Int = 0  // 设定的时间（秒）
+    var usedTimeInSeconds: Int = 0  // 实际使用的时间（秒）
     var description: String = ""
     var notes: String = ""
+    
+    // MARK: - Computed Properties for Display
+    
+    /// 设定时间的分钟数（四舍五入显示）
+    var timeInMinutes: Int {
+        get {
+            return Int(round(Double(timeInSeconds) / 60.0))
+        }
+        set {
+            timeInSeconds = newValue * 60
+        }
+    }
+    
+    /// 已用时间的分钟数（四舍五入显示）
+    var usedTimeInMinutes: Int {
+        get {
+            return Int(round(Double(usedTimeInSeconds) / 60.0))
+        }
+        set {
+            usedTimeInSeconds = newValue * 60
+        }
+    }
     
     // MARK: - Date Set
     var isAllDay: Bool = false

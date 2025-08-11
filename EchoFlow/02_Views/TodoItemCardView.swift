@@ -49,11 +49,11 @@ struct TodoItemCardView: View {
         }
         .padding()
         .background(
-    
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.white)) //background color
+                .fill(Color(.secondarySystemBackground))
+                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
         )
-        .padding(.horizontal)
+        // .padding(.horizontal)
     }
 }
 
@@ -61,13 +61,13 @@ struct TodoItemCardView: View {
 extension TodoItem {
     static let sampleActive = TodoItem(
         title: "Meditate",
-        timeInMinutes: 15
-    ).apply { $0.usedTimeInMinutes = 5 }
+        timeInSeconds: 15 * 60  // 15分钟转换为秒
+    ).apply { $0.usedTimeInSeconds = 5 * 60 }  // 5分钟转换为秒
     
     static let sampleCompleted = TodoItem(
         title: "Clean bathroom",
-        timeInMinutes: 25
-    ).apply { $0.usedTimeInMinutes = 20 }
+        timeInSeconds: 25 * 60  // 25分钟转换为秒
+    ).apply { $0.usedTimeInSeconds = 20 * 60 }  // 20分钟转换为秒
 }
 
 #Preview {

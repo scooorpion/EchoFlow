@@ -47,7 +47,7 @@ struct TodoDetailView: View {
                                 timeInputText = limited
                             }
                             
-                            // 更新todoItem的timeInMinutes
+                            // 更新todoItem的timeInMinutes（使用计算属性，自动转换为秒）
                             if let intValue = Int(limited) {
                                 todoItem.timeInMinutes = intValue
                             } else if limited.isEmpty {
@@ -100,7 +100,7 @@ struct TodoDetailView: View {
         .navigationTitle("任务详情") // 导航栏标题
         .navigationBarTitleDisplayMode(.inline) // 小标题样式
         .onAppear {
-            // 初始化时间输入文本
+            // 初始化时间输入文本（使用计算属性，自动从秒转换为分钟显示）
             timeInputText = todoItem.timeInMinutes > 0 ? String(todoItem.timeInMinutes) : ""
         }
         
@@ -119,7 +119,6 @@ struct TodoDetailView: View {
 }
 
 #Preview {
-    
     NavigationStack {
         TodoDetailView(todoItem: .constant(TodoItem.sampleActive))
     }
