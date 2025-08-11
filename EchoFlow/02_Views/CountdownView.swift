@@ -31,6 +31,10 @@ struct CountdownView: View {
     @State private var showingAbandonAlert = false
     // 是否已经开始过计时
     @State private var hasStarted = false
+    // 是否曾经开始过倒计时（一旦开始就永远不能重置时间设置）
+    @State private var hasEverStartedCountdown = false
+    // 是否曾经开始过任何计时（用于控制放弃按钮显示）
+    @State private var hasEverStarted = false
     
     // 初始化方法
     init(todoItem: Binding<TodoItem>) {
@@ -83,16 +87,16 @@ struct CountdownView: View {
                         // 倒计时模式 - 显示圆环和时间
                         ZStack {
                             // 外圈
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 20)
-                                .frame(width: 280, height: 280)
-                            
-                            // 进度圈
-                            Circle()
-                                .trim(from: 0, to: progress)
-                                .stroke(Color.black, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                                .frame(width: 280, height: 280)
-                                .rotationEffect(.degrees(-90))
+                             Circle()
+                                 .stroke(Color.primary.opacity(0.1), lineWidth: 20)
+                                 .frame(width: 280, height: 280)
+                             
+                             // 进度圈
+                             Circle()
+                                 .trim(from: 0, to: progress)
+                                 .stroke(Color.primary, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                                 .frame(width: 280, height: 280)
+                                 .rotationEffect(.degrees(-90))
                             
                             // 时间文本 - 倒计时模式
                             VStack {
@@ -123,27 +127,27 @@ struct CountdownView: View {
                 Spacer(minLength: 10)
                 
                 // 滑块区域 (固定高度: 80px)
-                VStack {
-                    if isCountdownMode && !isRunning && !hasStarted {
-                        VStack(spacing: 10) {
-                            Text("\(initialTimeMinutes) 分钟")
-                                .font(.headline)
-                            
-                            Slider(value: Binding<Double>(
-                                get: { Double(initialTimeMinutes) },
-                                set: { 
-                                    initialTimeMinutes = Int($0)
-                                    resetTimer()
-                                }
-                            ), in: 1...60, step: 1)
-                            .padding(.horizontal)
-                        }
-                    } else {
-                        // 占位空间，保持布局稳定
-                        Rectangle()
-                            .fill(Color.clear)
-                    }
-                }
+                 VStack {
+                     if isCountdownMode && !hasEverStartedCountdown {
+                         VStack(spacing: 10) {
+                             Text("\(initialTimeMinutes) 分钟")
+                                 .font(.headline)
+                             
+                             Slider(value: Binding<Double>(
+                                 get: { Double(initialTimeMinutes) },
+                                 set: { 
+                                     initialTimeMinutes = Int($0)
+                                     resetTimer()
+                                 }
+                             ), in: 1...60, step: 1)
+                             .padding(.horizontal)
+                         }
+                     } else {
+                         // 占位空间，保持布局稳定
+                         Rectangle()
+                             .fill(Color.clear)
+                     }
+                 }
                 .frame(height: 80)
                 .frame(maxWidth: .infinity)
                 
@@ -152,19 +156,26 @@ struct CountdownView: View {
                 // 控制按钮区域 (固定高度: 100px)
                 VStack {
                     HStack(spacing: 40) {
-                        // 放弃按钮
-                        Button(action: {
-                            showingAbandonAlert = true
-                        }) {
-                            VStack {
-                                Image(systemName: "xmark.circle.fill")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .foregroundColor(.red)
-                                Text("放弃")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
+                        // 放弃按钮 - 一旦开始过计时就一直显示
+                        if hasEverStarted {
+                            Button(action: {
+                                showingAbandonAlert = true
+                            }) {
+                                VStack {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .resizable()
+                                        .frame(width: 50, height: 50)
+                                        .foregroundColor(.red)
+                                    Text("放弃")
+                                        .font(.caption)
+                                        .foregroundColor(.red)
+                                }
                             }
+                        } else {
+                            // 占位空间，保持布局稳定
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 50, height: 70)
                         }
                         
                         // 开始/暂停按钮
@@ -174,6 +185,11 @@ struct CountdownView: View {
                             } else {
                                 startTimer()
                                 hasStarted = true
+                                hasEverStarted = true  // 标记为曾经开始过计时
+                                // 如果是倒计时模式，标记为曾经开始过倒计时
+                                if isCountdownMode {
+                                    hasEverStartedCountdown = true
+                                }
                             }
                         }) {
                             VStack {
@@ -208,7 +224,7 @@ struct CountdownView: View {
                 
                 // 完成按钮区域 (固定高度: 70px)
                 VStack {
-                    if !isCountdownMode && hasStarted {
+                    if !isCountdownMode && hasStarted && timeInSeconds >= 5 {
                         Button(action: {
                             saveTimeToTodoItem()
                             dismiss()
@@ -340,6 +356,7 @@ struct CountdownView: View {
         
         // 重置开始状态
         hasStarted = false
+        hasEverStartedCountdown = false  // 重置后允许重新设置时间
     }
     
     // 保存时间到TodoItem
