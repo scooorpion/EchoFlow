@@ -84,13 +84,16 @@ struct CountdownView: View {
                         ZStack {
                             // 外圈
                              Circle()
-                                 .stroke(Color.primary.opacity(0.2), lineWidth: 20)
+                                 .stroke(Color.primary.opacity(0.1), lineWidth: 20)
                                  .frame(width: 280, height: 280)
                              
                              // 进度圈
                              Circle()
                                  .trim(from: 0, to: progress)
-                                 .stroke(Color.primary, style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                                 .stroke(
+                                     Color.primary,
+                                     style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                                 )
                                  .frame(width: 280, height: 280)
                                  .rotationEffect(.degrees(-90))
                             
@@ -157,16 +160,36 @@ struct CountdownView: View {
                             Button(role: .destructive, action: {
                                 showingAbandonAlert = true
                             }) {
-                                VStack {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .foregroundColor(.red)
+                                VStack(spacing: 6) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color.red.opacity(0.1),
+                                                        Color.red.opacity(0.05)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .frame(width: 54, height: 54)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                                            )
+                                        
+                                        Image(systemName: "xmark")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundColor(.red)
+                                    }
+                                    
                                     Text("放弃")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .rounded, weight: .medium))
                                         .foregroundColor(.red)
                                 }
                             }
+                            .buttonStyle(.plain)
                             .accessibilityLabel("放弃")
                         } else {
                             // 占位空间，保持布局稳定
@@ -183,14 +206,23 @@ struct CountdownView: View {
                                 startTimer()
                             }
                         }) {
-                            VStack {
-                                Image(systemName: isRunning ? "pause.circle.fill" : "play.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
+                            VStack(spacing: 6) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.primary)
+                                        .frame(width: 64, height: 64)
+                                    
+                                    Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                                        .font(.system(size: 24, weight: .semibold))
+                                        .foregroundColor(Color(.systemBackground))
+                                }
+                                
                                 Text(isRunning ? "暂停" : "开始")
-                                    .font(.caption)
+                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                    .foregroundColor(.primary)
                             }
                         }
+                        .buttonStyle(.plain)
                         .accessibilityLabel(isRunning ? "暂停" : "开始")
                         
                         // 重置按钮 - 一旦开始过计时就一直显示
@@ -198,16 +230,36 @@ struct CountdownView: View {
                             Button(action: {
                                 showingResetAlert = true
                             }) {
-                                VStack {
-                                    Image(systemName: "arrow.counterclockwise.circle.fill")
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .foregroundColor(.gray)
+                                VStack(spacing: 6) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color.secondary.opacity(0.1),
+                                                        Color.secondary.opacity(0.05)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .frame(width: 54, height: 54)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                            )
+                                        
+                                        Image(systemName: "arrow.counterclockwise")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
                                     Text("重置")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                                        .font(.system(.caption, design: .rounded, weight: .medium))
+                                        .foregroundColor(.secondary)
                                 }
                             }
+                            .buttonStyle(.plain)
                             .accessibilityLabel("重置")
                         } else {
                             // 占位空间，保持布局稳定
@@ -230,13 +282,14 @@ struct CountdownView: View {
                             dismiss()
                         }) {
                             Text("完成计时")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
+                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                .foregroundColor(Color(.systemBackground))
+                                .padding(.vertical, 16)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.blue)
-                                .cornerRadius(10)
+                                .background(Color.primary)
+                                .cornerRadius(12)
                         }
+                        .buttonStyle(.plain)
                         .padding(.horizontal)
                     } else {
                         // 占位空间，保持布局稳定
@@ -252,6 +305,7 @@ struct CountdownView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(.horizontal)
+        .background(Color(.systemBackground))
         .navigationTitle("专注计时")
         .navigationBarTitleDisplayMode(.inline)
         .alert("确认放弃", isPresented: $showingAbandonAlert) {

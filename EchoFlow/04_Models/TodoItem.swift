@@ -64,3 +64,14 @@ struct TodoItem: Identifiable, Equatable {
         return copy
     }
 }
+
+// MARK: - Sample Data
+extension TodoItem {
+    static let sampleActive = TodoItem(
+        title: "示例任务",
+        timeInSeconds: 1800, // 30分钟
+        usedTimeInSeconds: 600, // 已用10分钟
+        description: "这是一个示例任务的描述",
+        notes: "这是一些备注信息"
+    )
+}

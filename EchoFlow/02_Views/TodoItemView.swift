@@ -16,12 +16,15 @@ struct TodoItemView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: 16) {
                     ForEach($viewModel.todoItems) { $item in
                         // 使用NavigationLink，并添加手势识别器来处理长按
                         NavigationLink(destination: CountdownView(todoItem: $item)) {
-                            TodoItemCardView(todoItem: $item)  // 传递绑定而不是值
-                                .contentShape(Rectangle())
+                            TodoItemCardView(todoItem: $item, onDelete: {
+                                // 删除当前项目
+                                viewModel.todoItems.removeAll { $0.id == item.id }
+                            })
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
                         // 使用高优先级的长按手势，确保长按时不会触发导航
@@ -43,12 +46,26 @@ struct TodoItemView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 3)
-                .padding(.top, 10)
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 20)
             }
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(.systemBackground),
+                        Color(.secondarySystemBackground)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .safeAreaInset(edge: .top, spacing: 0) {
-                HeaderView()
+                HeaderView(onAddTask: { newTask in
+                    print("添加新任务: \(newTask.title), 时间: \(newTask.timeInMinutes)分钟")
+                    viewModel.todoItems.append(newTask)
+                    print("当前任务总数: \(viewModel.todoItems.count)")
+                })
             }
             // 添加sheet修饰符，用于长按显示详情页
             .sheet(item: $selectedDetailItem) { item in

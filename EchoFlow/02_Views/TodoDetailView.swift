@@ -72,46 +72,19 @@ struct TodoDetailView: View {
             }
             
             Section(header: Text("描述（可选）")) {
-                // 用一个占位符来模拟 "写备注"
                 TextEditor(text: $todoItem.description)
-                    .frame(minHeight: 40) // 给备注一个最小高度
+                    .frame(minHeight: 40)
             }
-            
-            // MARK: - 时间设置 Section
-            Section {
-                if todoItem.isAllDay {
-                    DatePicker("日期", selection: $todoItem.startDate, displayedComponents: .date)
-                } else {
-                    DatePicker("开始时间", selection: $todoItem.startDate)
-                    DatePicker("结束时间", selection: $todoItem.endDate)
-                }
-                
-                Toggle("全天", isOn: $todoItem.isAllDay)
-            }
-            
-            // MARK: - 备注 Section
             
             Section(header: Text("备注")) {
-                // 用一个占位符来模拟 "写备注"
                 TextEditor(text: $todoItem.notes)
-                    .frame(minHeight: 40) // 给备注一个最小高度
+                    .frame(minHeight: 40)
             }
         }
-        .navigationTitle("任务详情") // 导航栏标题
-        .navigationBarTitleDisplayMode(.inline) // 小标题样式
+        .navigationTitle("任务详情")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            // 初始化时间输入文本（使用计算属性，自动从秒转换为分钟显示）
             timeInputText = todoItem.timeInMinutes > 0 ? String(todoItem.timeInMinutes) : ""
-        }
-        
-        // MARK: - 导航栏按钮
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("完成") {
-                    dismiss()
-                }
-                .fontWeight(.bold)
-            }
         }
         
         

@@ -8,6 +8,10 @@
 import SwiftUI
 
 struct HeaderView: View {
+    @State private var showingNewTaskView = false
+    
+    var onAddTask: ((TodoItem) -> Void)? = nil
+    
     var body: some View {
         HStack {
             Text("待办事项")
@@ -17,13 +21,14 @@ struct HeaderView: View {
             Spacer()
             
             Button(action: {
-                print("点击添加按钮")
+                showingNewTaskView = true
             }) {
-                Image(systemName: "plus") // +
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                Image(systemName: "plus")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(.primary)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("添加新待办事项")
         }
         // 1. 【关键点】为内容添加水平和底部边距，以确保它们在视觉上舒适
         // 注意：我们不需要加 .padding(.top)，因为 safeAreaInset 会自动处理
@@ -35,6 +40,20 @@ struct HeaderView: View {
         // .background(.ultraThinMaterial) 是实现苹果原生模糊效果的关键
         .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial)
+        .overlay(
+            // 底部分割线
+            Rectangle()
+                .fill(Color(.separator).opacity(0.3))
+                .frame(height: 0.5),
+            alignment: .bottom
+        )
+        .sheet(isPresented: $showingNewTaskView) {
+            AddNewTaskView { newTask in
+                print("接收到新任务: \(newTask.title), 时间: \(newTask.timeInMinutes)分钟")
+                onAddTask?(newTask)
+                print("新任务已添加到列表")
+            }
+        }
     }
 }
 
