@@ -8,52 +8,42 @@
 import SwiftUI
 
 struct CountdownView: View {
-    // 绑定待办事项，使用@Binding确保修改会反映到父视图
+    
     @Binding var todoItem: TodoItem
-    // 用于关闭当前视图的环境变量
     @Environment(\.dismiss) private var dismiss
     
-    // State变量解释：
-    // 1. @State是SwiftUI中用于存储视图的本地状态的属性包装器
-    // 2. 当@State变量改变时，SwiftUI会自动重新渲染视图
     
-    // 计时模式：true为倒计时，false为正计时
     @State private var isCountdownMode = true
-    // 计时时间（秒）：倒计时模式下为剩余时间，正计时模式下为已用时间
-    @State private var timeInSeconds: Int
+    
+    // 当前时间（秒）
+    @State private var timeInSeconds = 25 * 60
+    
     // 计时器是否正在运行
     @State private var isRunning = false
+    
     // 计时器对象，用于定时更新时间
     @State private var timer: Timer? = nil
+    
     // 初始时间（分钟），仅用于倒计时模式
-    @State private var initialTimeMinutes: Int
+    @State private var initialTimeMinutes = 25
+    
     // 是否显示确认放弃对话框
     @State private var showingAbandonAlert = false
+    
     // 是否已经开始过计时
     @State private var hasStarted = false
+    
     // 是否曾经开始过倒计时（一旦开始就永远不能重置时间设置）
     @State private var hasEverStartedCountdown = false
+    
     // 是否曾经开始过任何计时（用于控制放弃按钮显示）
     @State private var hasEverStarted = false
     
-    // 初始化方法
-    init(todoItem: Binding<TodoItem>) {
-        // 绑定todoItem
-        self._todoItem = todoItem
-        
-        // 倒计时默认时间固定为25分钟，与TodoItem的设定时间无关
-        let defaultCountdownMinutes = 25
-        
-        // 保存初始时间（分钟）- 倒计时专用
-        self._initialTimeMinutes = State(initialValue: defaultCountdownMinutes)
-        
-        // 初始化计时时间（秒）
-        // 默认为倒计时模式，使用固定的25分钟
-        self._timeInSeconds = State(initialValue: defaultCountdownMinutes * 60)
-        
-        // 如果用户想要正计时模式，可以手动切换
-        // 这里默认都是倒计时模式
-    }
+    // 记录本次会话开始时的时间快照（用于计算增量时间）
+    @State private var sessionStartTimeSnapshot: Int = 0
+    
+    // 标记是否是放弃操作，用于避免在onDisappear中保存时间
+    @State private var isAbandoning = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -224,7 +214,7 @@ struct CountdownView: View {
                 
                 // 完成按钮区域 (固定高度: 70px)
                 VStack {
-                    if !isCountdownMode && hasStarted && timeInSeconds >= 5 {
+                    if !isCountdownMode && hasEverStarted && timeInSeconds >= 5 {
                         Button(action: {
                             saveTimeToTodoItem()
                             dismiss()
@@ -257,19 +247,22 @@ struct CountdownView: View {
         .alert("确认放弃", isPresented: $showingAbandonAlert) {
             Button("取消", role: .cancel) { }
             Button("确认放弃", role: .destructive) {
-                // 保存当前时间
-                saveTimeToTodoItem()
-                // 关闭视图
+                // 标记为放弃操作，避免在onDisappear中保存时间
+                isAbandoning = true
+                // 放弃时不保存当前计时结果，直接关闭视图
                 dismiss()
             }
         } message: {
-            Text("放弃将保存当前计时结果，确定要放弃吗？")
+            Text("放弃将丢弃当前计时结果，确定要放弃吗？")
         }
         .onDisappear {
-            // 确保离开视图时停止计时器并保存时间
-            saveTimeToTodoItem()
+            // 先停止计时器，避免极端竞态条件
             timer?.invalidate()
             timer = nil
+            // 只有在非放弃操作时才保存时间
+            if !isAbandoning {
+                saveTimeToTodoItem()
+            }
         }
     }
     
@@ -303,6 +296,9 @@ struct CountdownView: View {
         // 如果计时器已经在运行，先停止它
         timer?.invalidate()
         
+        // 记录本次会话开始时的时间快照
+        sessionStartTimeSnapshot = timeInSeconds
+        
         // 设置状态为运行中
         isRunning = true
         
@@ -319,7 +315,7 @@ struct CountdownView: View {
                     // 时间到时的处理
                     self.pauseTimer()
                     // 保存时间到TodoItem
-                    self.saveTimeToTodoItem()
+                    // self.saveTimeToTodoItem()
                 }
             } else {
                 // 正计时模式：时间一直增加
@@ -330,21 +326,23 @@ struct CountdownView: View {
     }
     
     // 暂停计时函数 - 停止但不重置计时器
-    private func pauseTimer() {
+    private func pauseTimer(save: Bool = true) {
         // 设置状态为非运行
         isRunning = false
         // 停止计时器
         timer?.invalidate()
         // 清空计时器引用
         timer = nil
-        // 保存当前时间到TodoItem
-        saveTimeToTodoItem()
+        // 根据参数决定是否保存当前时间到TodoItem
+        if save {
+            saveTimeToTodoItem()
+        }
     }
     
     // 重置计时函数 - 停止计时器并重置时间
     private func resetTimer() {
-        // 先暂停计时器
-        pauseTimer()
+        // 先暂停计时器，但不保存时间
+        pauseTimer(save: false)
         
         if isCountdownMode {
             // 倒计时模式：重置为初始时间
@@ -361,28 +359,27 @@ struct CountdownView: View {
     
     // 保存时间到TodoItem
     private func saveTimeToTodoItem() {
-        // 只有在计时器运行过或有时间变化时才保存
+        
         if hasStarted {
             if isCountdownMode {
-                // 倒计时模式：累加已用时间到TodoItem的已用时间中
-                let usedTimeInSeconds = (initialTimeMinutes * 60) - timeInSeconds
-                if usedTimeInSeconds > 0 {
-                    // 将本次倒计时的已用时间累加到TodoItem的总已用时间中
-                    todoItem.usedTimeInSeconds += usedTimeInSeconds
+                // 倒计时模式：计算本次会话实际用掉的时间
+                // 本次会话用时 = 开始时剩余时间 - 当前剩余时间
+                let sessionUsedTime = sessionStartTimeSnapshot - timeInSeconds
+                if sessionUsedTime > 0 {
+                    todoItem.usedTimeInSeconds += sessionUsedTime
                 }
-                // 注意：不修改todoItem的timeInSeconds，保持原有的设定时间不变
             } else {
-                // 正计时模式：累加已用时间到TodoItem的已用时间中
-                if timeInSeconds > 0 {
-                    todoItem.usedTimeInSeconds += timeInSeconds
+                // 正计时模式：计算本次会话增加的时间
+                // 本次会话用时 = 当前累计时间 - 开始时累计时间
+                let sessionUsedTime = timeInSeconds - sessionStartTimeSnapshot
+                if sessionUsedTime > 0 {
+                    todoItem.usedTimeInSeconds += sessionUsedTime
                 }
-                // 注意：不修改todoItem的timeInSeconds，保持原有的设定时间不变
             }
-            
-            // 保存后重置状态，避免重复保存
             hasStarted = false
         }
     }
+    
 }
 
 #Preview {
