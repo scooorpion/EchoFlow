@@ -11,6 +11,7 @@ struct CountdownView: View {
     
     @Binding var todoItem: TodoItem
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     
     
     @State private var isCountdownMode = true
@@ -30,6 +31,9 @@ struct CountdownView: View {
     // 是否显示确认放弃对话框
     @State private var showingAbandonAlert = false
     
+    // 控制重置确认对话框的显示
+    @State private var showingResetAlert = false
+    
     // 是否已经开始过计时
     @State private var hasStarted = false
     
@@ -39,14 +43,16 @@ struct CountdownView: View {
     // 是否曾经开始过任何计时（用于控制放弃按钮显示）
     @State private var hasEverStarted = false
     
-    // 记录本次会话开始时的时间快照（用于计算增量时间）
+    // 记录本次会话开始时的时间快照（用于增量结算）
     @State private var sessionStartTimeSnapshot: Int = 0
     
-    // 标记是否是放弃操作，用于避免在onDisappear中保存时间
-    @State private var isAbandoning = false
+    // 记录当前计时段开始的真实时间（用于前后台/丢tick对齐）
+    @State private var segmentStartDate: Date?
+    
+
     
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { _ in
             VStack(spacing: 0) {
                 // 顶部区域：标题 + 模式切换 (固定高度: 120px)
                 VStack(spacing: 15) {
@@ -78,7 +84,7 @@ struct CountdownView: View {
                         ZStack {
                             // 外圈
                              Circle()
-                                 .stroke(Color.primary.opacity(0.1), lineWidth: 20)
+                                 .stroke(Color.primary.opacity(0.2), lineWidth: 20)
                                  .frame(width: 280, height: 280)
                              
                              // 进度圈
@@ -148,7 +154,7 @@ struct CountdownView: View {
                     HStack(spacing: 40) {
                         // 放弃按钮 - 一旦开始过计时就一直显示
                         if hasEverStarted {
-                            Button(action: {
+                            Button(role: .destructive, action: {
                                 showingAbandonAlert = true
                             }) {
                                 VStack {
@@ -161,6 +167,7 @@ struct CountdownView: View {
                                         .foregroundColor(.red)
                                 }
                             }
+                            .accessibilityLabel("放弃")
                         } else {
                             // 占位空间，保持布局稳定
                             Rectangle()
@@ -174,12 +181,6 @@ struct CountdownView: View {
                                 pauseTimer()
                             } else {
                                 startTimer()
-                                hasStarted = true
-                                hasEverStarted = true  // 标记为曾经开始过计时
-                                // 如果是倒计时模式，标记为曾经开始过倒计时
-                                if isCountdownMode {
-                                    hasEverStartedCountdown = true
-                                }
                             }
                         }) {
                             VStack {
@@ -190,20 +191,29 @@ struct CountdownView: View {
                                     .font(.caption)
                             }
                         }
+                        .accessibilityLabel(isRunning ? "暂停" : "开始")
                         
-                        // 重置按钮
-                        Button(action: {
-                            resetTimer()
-                        }) {
-                            VStack {
-                                Image(systemName: "arrow.counterclockwise.circle.fill")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .foregroundColor(.gray)
-                                Text("重置")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                        // 重置按钮 - 一旦开始过计时就一直显示
+                        if hasEverStarted {
+                            Button(action: {
+                                showingResetAlert = true
+                            }) {
+                                VStack {
+                                    Image(systemName: "arrow.counterclockwise.circle.fill")
+                                        .resizable()
+                                        .frame(width: 50, height: 50)
+                                        .foregroundColor(.gray)
+                                    Text("重置")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
                             }
+                            .accessibilityLabel("重置")
+                        } else {
+                            // 占位空间，保持布局稳定
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 50, height: 70)
                         }
                     }
                 }
@@ -216,7 +226,7 @@ struct CountdownView: View {
                 VStack {
                     if !isCountdownMode && hasEverStarted && timeInSeconds >= 5 {
                         Button(action: {
-                            saveTimeToTodoItem()
+                            pauseTimer()
                             dismiss()
                         }) {
                             Text("完成计时")
@@ -247,21 +257,45 @@ struct CountdownView: View {
         .alert("确认放弃", isPresented: $showingAbandonAlert) {
             Button("取消", role: .cancel) { }
             Button("确认放弃", role: .destructive) {
-                // 标记为放弃操作，避免在onDisappear中保存时间
-                isAbandoning = true
-                // 放弃时不保存当前计时结果，直接关闭视图
+                // 放弃时显式停表且不保存
+                pauseTimer(save: false)
                 dismiss()
             }
         } message: {
             Text("放弃将丢弃当前计时结果，确定要放弃吗？")
         }
+        .alert("确认重置", isPresented: $showingResetAlert) {
+            Button("取消", role: .cancel) { }
+            Button("确认重置", role: .destructive) {
+                resetTimer()
+            }
+        } message: {
+            Text("重置将丢弃当前计时结果，确定要重置吗？")
+        }
         .onDisappear {
-            // 先停止计时器，避免极端竞态条件
+            // 停止计时器
             timer?.invalidate()
             timer = nil
-            // 只有在非放弃操作时才保存时间
-            if !isAbandoning {
-                saveTimeToTodoItem()
+            // 兜底保存时间
+            saveTimeToTodoItem()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active && isRunning {
+                // 从后台回到前台时，重新对齐时间
+                if let startDate = segmentStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    
+                    if isCountdownMode {
+                        let newTime = max(0, sessionStartTimeSnapshot - Int(elapsed))
+                        timeInSeconds = newTime
+                        
+                        if newTime == 0 {
+                            pauseTimer()
+                        }
+                    } else {
+                        timeInSeconds = sessionStartTimeSnapshot + Int(elapsed)
+                    }
+                }
             }
         }
     }
@@ -296,8 +330,18 @@ struct CountdownView: View {
         // 如果计时器已经在运行，先停止它
         timer?.invalidate()
         
+        // 设置开始标记（单一入口）
+        hasStarted = true
+        hasEverStarted = true
+        if isCountdownMode {
+            hasEverStartedCountdown = true
+        }
+        
         // 记录本次会话开始时的时间快照
         sessionStartTimeSnapshot = timeInSeconds
+        
+        // 记录当前计时段开始的真实时间
+        segmentStartDate = Date()
         
         // 设置状态为运行中
         isRunning = true
@@ -306,22 +350,29 @@ struct CountdownView: View {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             // 注意：结构体不需要使用 [weak self]，因为结构体是值类型，不会造成循环引用
             
-            if self.isCountdownMode {
-                // 倒计时模式
-                if self.timeInSeconds > 0 {
-                    // 每秒减少1秒
-                    self.timeInSeconds -= 1
+            // 真实流逝时间对齐
+            if let startDate = self.segmentStartDate {
+                let elapsed = Date().timeIntervalSince(startDate)
+                
+                if self.isCountdownMode {
+                    // 倒计时模式：从快照减去流逝时间
+                    let newTime = max(0, self.sessionStartTimeSnapshot - Int(elapsed))
+                    self.timeInSeconds = newTime
+                    
+                    if newTime == 0 {
+                        // 时间到时的处理
+                        self.pauseTimer()
+                    }
                 } else {
-                    // 时间到时的处理
-                    self.pauseTimer()
-                    // 保存时间到TodoItem
-                    // self.saveTimeToTodoItem()
+                    // 正计时模式：快照加上流逝时间
+                    self.timeInSeconds = self.sessionStartTimeSnapshot + Int(elapsed)
                 }
-            } else {
-                // 正计时模式：时间一直增加
-                self.timeInSeconds += 1
-                // 正计时模式不需要每秒保存，只在暂停或结束时保存
             }
+        }
+        
+        // 将计时器加入.common RunLoop模式，防止交互期间暂停
+        if let timer = timer {
+            RunLoop.main.add(timer, forMode: .common)
         }
     }
     
@@ -333,6 +384,8 @@ struct CountdownView: View {
         timer?.invalidate()
         // 清空计时器引用
         timer = nil
+        // 清空时间锚点
+        segmentStartDate = nil
         // 根据参数决定是否保存当前时间到TodoItem
         if save {
             saveTimeToTodoItem()
