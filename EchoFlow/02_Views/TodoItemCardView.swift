@@ -31,13 +31,13 @@ struct TodoItemCardView: View {
     // 进度条颜色
     private var progressColor: Color {
         if todoItem.isCompleted {
-            return .green
+            return Color(red: 0.2, green: 0.7, blue: 0.3)
         } else if progress >= 1.0 {
-            return .orange
+            return Color(red: 0.9, green: 0.5, blue: 0.2)
         } else if progress >= 0.8 {
-            return .yellow
+            return Color(red: 0.9, green: 0.7, blue: 0.2)
         } else {
-            return .blue
+            return Color(red: 0.3, green: 0.6, blue: 0.9)
         }
     }
     
@@ -48,6 +48,10 @@ struct TodoItemCardView: View {
                 // 左滑显示编辑按钮
                 if offset > 0 {
                     Button(action: {
+                        // 添加触感反馈
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                        
                         showingEditView = true
                         withAnimation(.spring()) {
                             offset = 0
@@ -71,6 +75,10 @@ struct TodoItemCardView: View {
                 // 右滑显示删除按钮
                 if offset < 0 {
                     Button(action: {
+                        // 添加触感反馈
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+                        impactFeedback.impactOccurred()
+                        
                         showingDeleteAlert = true
                         withAnimation(.spring()) {
                             offset = 0
@@ -142,7 +150,7 @@ struct TodoItemCardView: View {
                         // 进度条背景
                         if todoItem.timeInSeconds > 0 {
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(progressColor.opacity(0.3))
+                                .fill(progressColor.opacity(0.2))
                                 .frame(width: geometry.size.width * progress)
                                 .animation(.easeInOut(duration: 0.3), value: progress)
                         }
@@ -150,7 +158,7 @@ struct TodoItemCardView: View {
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
             .offset(x: offset)
             .gesture(
                 DragGesture()

@@ -17,7 +17,7 @@ struct CountdownView: View {
     @State private var isCountdownMode = true
     
     // 当前时间（秒）
-    @State private var timeInSeconds = 25 * 60
+    @State private var timeInSeconds: Int
     
     // 计时器是否正在运行
     @State private var isRunning = false
@@ -26,7 +26,7 @@ struct CountdownView: View {
     @State private var timer: Timer? = nil
     
     // 初始时间（分钟），仅用于倒计时模式
-    @State private var initialTimeMinutes = 25
+    @State private var initialTimeMinutes: Int
     
     // 是否显示确认放弃对话框
     @State private var showingAbandonAlert = false
@@ -52,7 +52,18 @@ struct CountdownView: View {
     // 标记是否应该保存时间（用于区分正常退出和放弃退出）
     @State private var shouldSaveOnExit = true
     
-
+    // 计算滑条的最大值
+    private var maxSliderValue: Double {
+        return Double(min(todoItem.timeInMinutes, 60))
+    }
+    
+    // 初始化器
+    init(todoItem: Binding<TodoItem>) {
+        self._todoItem = todoItem
+        let defaultMinutes = min(25, todoItem.wrappedValue.timeInMinutes)
+        self._timeInSeconds = State(initialValue: defaultMinutes * 60)
+        self._initialTimeMinutes = State(initialValue: defaultMinutes)
+    }
     
     var body: some View {
         GeometryReader { _ in
@@ -95,6 +106,10 @@ struct CountdownView: View {
                             .pickerStyle(SegmentedPickerStyle())
                             .padding(.horizontal)
                             .onChange(of: isCountdownMode) {
+                                // 添加触感反馈
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                impactFeedback.impactOccurred()
+                                
                                 resetTimer()
                             }
                             .transition(.asymmetric(
@@ -166,12 +181,18 @@ struct CountdownView: View {
                                  .font(.headline)
                              
                              Slider(value: Binding<Double>(
-                                 get: { Double(initialTimeMinutes) },
-                                 set: { 
-                                     initialTimeMinutes = Int($0)
-                                     resetTimer()
-                                 }
-                             ), in: 1...60, step: 1)
+                                  get: { Double(initialTimeMinutes) },
+                                  set: { newValue in
+                                      let newMinutes = Int(newValue)
+                                      if newMinutes != initialTimeMinutes {
+                                          // 每分钟变化时添加触感反馈
+                                          let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                          impactFeedback.impactOccurred()
+                                      }
+                                      initialTimeMinutes = newMinutes
+                                      resetTimer()
+                                  }
+                              ), in: 1...maxSliderValue, step: 1)
                              .padding(.horizontal)
                          }
                      } else {
@@ -191,6 +212,10 @@ struct CountdownView: View {
                         // 放弃按钮 - 一旦开始过计时就一直显示
                         if hasEverStarted {
                             Button(role: .destructive, action: {
+                                // 添加触感反馈
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+                                impactFeedback.impactOccurred()
+                                
                                 showingAbandonAlert = true
                             }) {
                                 VStack(spacing: 6) {
@@ -233,6 +258,10 @@ struct CountdownView: View {
                         
                         // 开始/暂停按钮
                         Button(action: {
+                            // 添加触感反馈
+                            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                            impactFeedback.impactOccurred()
+                            
                             if isRunning {
                                 pauseTimer()
                             } else {
@@ -261,6 +290,10 @@ struct CountdownView: View {
                         // 重置按钮 - 一旦开始过计时就一直显示
                         if hasEverStarted {
                             Button(action: {
+                                // 添加触感反馈
+                                let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+                                impactFeedback.impactOccurred()
+                                
                                 showingResetAlert = true
                             }) {
                                 VStack(spacing: 6) {
@@ -311,6 +344,10 @@ struct CountdownView: View {
                 VStack {
                     if !isCountdownMode && hasEverStarted && timeInSeconds >= 5 {
                         Button(action: {
+                            // 添加触感反馈
+                            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                            impactFeedback.impactOccurred()
+                            
                             pauseTimer()
                             dismiss()
                         }) {

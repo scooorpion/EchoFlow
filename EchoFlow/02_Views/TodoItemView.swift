@@ -36,6 +36,14 @@ struct TodoItemView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .simultaneousGesture(
+                            TapGesture()
+                                .onEnded { _ in
+                                    // 添加轻微震动反馈
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                    impactFeedback.impactOccurred()
+                                }
+                        )
                         // 使用高优先级的长按手势，确保长按时不会触发导航
                         .highPriorityGesture(
                             LongPressGesture(minimumDuration: 0.5)

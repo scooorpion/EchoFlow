@@ -21,6 +21,10 @@ struct HeaderView: View {
             Spacer()
             
             Button(action: {
+                // 添加触感反馈
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                impactFeedback.impactOccurred()
+                
                 showingNewTaskView = true
             }) {
                 Image(systemName: "plus")

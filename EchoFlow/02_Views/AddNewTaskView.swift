@@ -80,6 +80,10 @@ struct AddNewTaskView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("完成") {
+                        // 添加触感反馈
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                        
                         createNewTask()
                     }
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
