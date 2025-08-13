@@ -100,8 +100,8 @@ struct TodoItemCardView: View {
                         .strikethrough(todoItem.isCompleted, color: .secondary)
                         .lineLimit(1)
                     
-                    if !todoItem.description.isEmpty {
-                        Text(todoItem.description)
+                    if !todoItem.taskDescription.isEmpty {
+                            Text(todoItem.taskDescription)
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)

@@ -7,8 +7,10 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
-struct TodoItem: Identifiable, Equatable {
+@Model
+class TodoItem: Identifiable, Equatable {
     
     //比较运算符重载
     static func == (lhs: TodoItem, rhs: TodoItem) -> Bool {
@@ -16,11 +18,11 @@ struct TodoItem: Identifiable, Equatable {
     }
     
     // MARK: - Basic Setting
-    let id = UUID()
+    @Attribute(.unique) var id: UUID = UUID()
     var title: String
     var timeInSeconds: Int = 0  // 设定的时间（秒）
     var usedTimeInSeconds: Int = 0  // 实际使用的时间（秒）
-    var description: String = ""
+    var taskDescription: String = ""
     var notes: String = ""
     
     // MARK: - Computed Properties for Display
@@ -57,11 +59,13 @@ struct TodoItem: Identifiable, Equatable {
     var isCompleted: Bool = false
     
     
-    // 添加apply方法，支持链式调用设置属性
-    func apply(_ closure: (inout TodoItem) -> Void) -> TodoItem {
-        var copy = self
-        closure(&copy)
-        return copy
+    // MARK: - Initializer
+    init(title: String, timeInSeconds: Int = 0, usedTimeInSeconds: Int = 0, description: String = "", notes: String = "") {
+        self.title = title
+        self.timeInSeconds = timeInSeconds
+        self.usedTimeInSeconds = usedTimeInSeconds
+        self.taskDescription = description
+        self.notes = notes
     }
 }
 

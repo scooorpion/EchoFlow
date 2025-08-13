@@ -14,7 +14,7 @@ struct AddNewTaskView: View {
     // 新任务的属性
     @State private var title: String = ""
     @State private var timeInputText: String = ""
-    @State private var description: String = ""
+    @State private var taskDescription: String = ""
     @State private var notes: String = ""
     @State private var autoFill: String = ""
     
@@ -59,7 +59,7 @@ struct AddNewTaskView: View {
                 
                 // 描述部分
                 Section(header: Text("描述（可选）")) {
-                    TextEditor(text: $description)
+                    TextEditor(text: $taskDescription)
                         .frame(minHeight: 60)
                 }
                 
@@ -95,7 +95,7 @@ struct AddNewTaskView: View {
         var newTask = TodoItem(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             timeInSeconds: timeInMinutes * 60,
-            description: description,
+            description: taskDescription,
             notes: notes
         )
         
@@ -103,10 +103,10 @@ struct AddNewTaskView: View {
         
         print("创建新任务: \(newTask.title), 时间: \(newTask.timeInMinutes)分钟")
         
-        // 通过回调传递新任务
+        // 调用回调函数，将新任务传递给父视图
         onAddTask(newTask)
         
-        // 关闭视图
+        // 关闭当前视图
         dismiss()
     }
 }

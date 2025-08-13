@@ -72,7 +72,7 @@ struct TodoDetailView: View {
             }
             
             Section(header: Text("描述（可选）")) {
-                TextEditor(text: $todoItem.description)
+                TextEditor(text: $todoItem.taskDescription)
                     .frame(minHeight: 40)
             }
             

@@ -6,23 +6,32 @@
 //
 
 import SwiftUI
+import SwiftData
 
 // 这是主页面，用于显示所有待办事项列表
 struct TodoItemView: View {
     
-    @StateObject private var viewModel = TodoItemViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel = TodoItemViewModel()
     @State private var selectedDetailItem: TodoItem? = nil
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 16) {
-                    ForEach($viewModel.todoItems) { $item in
+                    ForEach(viewModel.todoItems.indices, id: \.self) { index in
+                        let item = viewModel.todoItems[index]
                         // 使用NavigationLink，并添加手势识别器来处理长按
-                        NavigationLink(destination: CountdownView(todoItem: $item)) {
-                            TodoItemCardView(todoItem: $item, onDelete: {
+                        NavigationLink(destination: CountdownView(todoItem: Binding(
+                            get: { viewModel.todoItems[index] },
+                            set: { viewModel.todoItems[index] = $0; viewModel.saveContext() }
+                        ))) {
+                            TodoItemCardView(todoItem: Binding(
+                                get: { viewModel.todoItems[index] },
+                                set: { viewModel.todoItems[index] = $0; viewModel.saveContext() }
+                            ), onDelete: {
                                 // 删除当前项目
-                                viewModel.todoItems.removeAll { $0.id == item.id }
+                                viewModel.deleteTodoItem(item)
                             })
                             .contentShape(Rectangle())
                         }
@@ -60,10 +69,10 @@ struct TodoItemView: View {
                     endPoint: .bottom
                 )
             )
-            .safeAreaInset(edge: .top, spacing: 0) {
+            .safeAreaInset(edge: .top) {
                 HeaderView(onAddTask: { newTask in
                     print("添加新任务: \(newTask.title), 时间: \(newTask.timeInMinutes)分钟")
-                    viewModel.todoItems.append(newTask)
+                    viewModel.addTodoItem(newTask)
                     print("当前任务总数: \(viewModel.todoItems.count)")
                 })
             }
@@ -74,21 +83,28 @@ struct TodoItemView: View {
                     // 使用NavigationStack包装详情视图，以便显示导航栏
                     NavigationStack {
                         // 创建TodoDetailView并传入绑定
-                        // 使用$viewModel.todoItems[index]创建绑定，确保修改会反映到模型中
-                        TodoDetailView(todoItem: $viewModel.todoItems[index])
-                            .onDisappear {
-                                // 当详情页关闭时，强制刷新视图以确保数据同步
-                                // 这里通过修改一个临时变量来触发视图刷新
-                                viewModel.objectWillChange.send()
-                            }
+                        TodoDetailView(todoItem: Binding(
+                            get: { viewModel.todoItems[index] },
+                            set: { viewModel.todoItems[index] = $0; viewModel.saveContext() }
+                        ))
+                        .onDisappear {
+                            // 当详情页关闭时，保存数据
+                            viewModel.saveContext()
+                        }
                     }
                 }
             }
             .onChange(of: selectedDetailItem) { oldValue, newValue in
-                // 当selectedDetailItem变为nil时（即sheet关闭时），清空选中项
+                // 当详情页关闭时的处理
                 if newValue == nil {
-                    // 这里可以添加额外的清理逻辑
+                    // 保存数据并重新加载
+                    viewModel.saveContext()
+                    viewModel.loadTodoItems()
                 }
+            }
+            .onAppear {
+                // 设置ModelContext并加载数据
+                viewModel.setModelContext(modelContext)
             }
             
         }
