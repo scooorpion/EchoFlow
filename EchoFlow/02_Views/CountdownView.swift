@@ -17,7 +17,7 @@ struct CountdownView: View {
     @State private var isCountdownMode = true
     
     // 当前时间（秒）
-    @State private var timeInSeconds: Int
+    @State private var timeInSeconds = 25 * 60
     
     // 计时器是否正在运行
     @State private var isRunning = false
@@ -26,7 +26,7 @@ struct CountdownView: View {
     @State private var timer: Timer? = nil
     
     // 初始时间（分钟），仅用于倒计时模式
-    @State private var initialTimeMinutes: Int
+    @State private var initialTimeMinutes = 25
     
     // 是否显示确认放弃对话框
     @State private var showingAbandonAlert = false
@@ -55,14 +55,6 @@ struct CountdownView: View {
     // 计算滑条的最大值
     private var maxSliderValue: Double {
         return Double(min(todoItem.timeInMinutes, 60))
-    }
-    
-    // 初始化器
-    init(todoItem: Binding<TodoItem>) {
-        self._todoItem = todoItem
-        let defaultMinutes = min(25, todoItem.wrappedValue.timeInMinutes)
-        self._timeInSeconds = State(initialValue: defaultMinutes * 60)
-        self._initialTimeMinutes = State(initialValue: defaultMinutes)
     }
     
     var body: some View {

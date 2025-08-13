@@ -18,7 +18,7 @@ struct TodoItemView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 16) {
+                VStack(spacing: 16) {
                     ForEach(viewModel.todoItems.indices, id: \.self) { index in
                         let item = viewModel.todoItems[index]
                         // 使用NavigationLink，并添加手势识别器来处理长按
@@ -36,14 +36,6 @@ struct TodoItemView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .simultaneousGesture(
-                            TapGesture()
-                                .onEnded { _ in
-                                    // 添加轻微震动反馈
-                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                                    impactFeedback.impactOccurred()
-                                }
-                        )
                         // 使用高优先级的长按手势，确保长按时不会触发导航
                         .highPriorityGesture(
                             LongPressGesture(minimumDuration: 0.5)

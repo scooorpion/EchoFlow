@@ -96,7 +96,7 @@ struct AddNewTaskView: View {
         // 创建新的TodoItem
         let timeInMinutes = Int(timeInputText) ?? 0
         
-        var newTask = TodoItem(
+        let newTask = TodoItem(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             timeInSeconds: timeInMinutes * 60,
             description: taskDescription,
