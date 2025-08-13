@@ -49,6 +49,9 @@ struct CountdownView: View {
     // 记录当前计时段开始的真实时间（用于前后台/丢tick对齐）
     @State private var segmentStartDate: Date?
     
+    // 标记是否应该保存时间（用于区分正常退出和放弃退出）
+    @State private var shouldSaveOnExit = true
+    
 
     
     var body: some View {
@@ -62,15 +65,45 @@ struct CountdownView: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                     
-                    Picker("计时模式", selection: $isCountdownMode) {
-                        Text("倒计时").tag(true)
-                        Text("正计时").tag(false)
+                    // 计时模式选择器 - 开始后锁定模式
+                    Group {
+                        if hasEverStarted {
+                            // 已开始计时：显示当前模式的固定标签
+                            HStack {
+                                Spacer()
+                                Text(isCountdownMode ? "倒计时" : "正计时")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 20)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.primary.opacity(0.1))
+                                    )
+                                Spacer()
+                            }
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                removal: .scale(scale: 1.2).combined(with: .opacity)
+                            ))
+                        } else {
+                            // 未开始计时：显示可切换的选择器
+                            Picker("计时模式", selection: $isCountdownMode) {
+                                Text("倒计时").tag(true)
+                                Text("正计时").tag(false)
+                            }
+                            .pickerStyle(SegmentedPickerStyle())
+                            .padding(.horizontal)
+                            .onChange(of: isCountdownMode) {
+                                resetTimer()
+                            }
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                removal: .scale(scale: 1.2).combined(with: .opacity)
+                            ))
+                        }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding(.horizontal)
-                    .onChange(of: isCountdownMode) {
-                        resetTimer()
-                    }
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0), value: hasEverStarted)
                 }
                 .frame(height: 120)
                 .frame(maxWidth: .infinity)
@@ -311,7 +344,8 @@ struct CountdownView: View {
         .alert("确认放弃", isPresented: $showingAbandonAlert) {
             Button("取消", role: .cancel) { }
             Button("确认放弃", role: .destructive) {
-                // 放弃时显式停表且不保存
+                // 放弃时不保存时间
+                shouldSaveOnExit = false
                 pauseTimer(save: false)
                 dismiss()
             }
@@ -330,8 +364,10 @@ struct CountdownView: View {
             // 停止计时器
             timer?.invalidate()
             timer = nil
-            // 兜底保存时间
-            saveTimeToTodoItem()
+            // 根据shouldSaveOnExit标志决定是否保存时间
+            if shouldSaveOnExit {
+                saveTimeToTodoItem()
+            }
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && isRunning {
@@ -384,11 +420,13 @@ struct CountdownView: View {
         // 如果计时器已经在运行，先停止它
         timer?.invalidate()
         
-        // 设置开始标记（单一入口）
-        hasStarted = true
-        hasEverStarted = true
-        if isCountdownMode {
-            hasEverStartedCountdown = true
+        // 设置开始标记（单一入口）- 使用动画
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
+            hasStarted = true
+            hasEverStarted = true
+            if isCountdownMode {
+                hasEverStartedCountdown = true
+            }
         }
         
         // 记录本次会话开始时的时间快照
@@ -459,9 +497,15 @@ struct CountdownView: View {
             timeInSeconds = 0
         }
         
-        // 重置开始状态
-        hasStarted = false
-        hasEverStartedCountdown = false  // 重置后允许重新设置时间
+        // 重置开始状态 - 使用动画
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0)) {
+            hasStarted = false
+            hasEverStartedCountdown = false  // 重置后允许重新设置时间
+            hasEverStarted = false  // 重置后恢复选择器可用状态
+        }
+        
+        // 重置后恢复保存标志
+        shouldSaveOnExit = true
     }
     
     // 保存时间到TodoItem
